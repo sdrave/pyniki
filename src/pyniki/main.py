@@ -208,12 +208,12 @@ class RobotDialog(Dialog):
         self.y = y
         self.words = [
             Word(y+2,  1, 'Edit', True),
-            Word(y+2, 11, 'Compile', True),
-            Word(y+2, 20, 'Run', True),
-            Word(y+2, 30, 'New', True),
-            Word(y+2, 36, 'Load', True),
-            Word(y+2, 44, 'Save', True),
-            Word(y+2, 50, 'Print', True),
+            # Word(y+2, 10, 'Compile', True),
+            Word(y+2, 23, 'Run', True),
+            Word(y+2, 34, 'New', True),
+            Word(y+2, 44, 'Load', True),
+            Word(y+2, 54, 'Save', True),
+            # Word(y+2, 64, 'Print', True),
             Word(y+2, 74, 'Quit', True),
         ]
         self.filename = FileName(self.y+1, 18)
@@ -231,11 +231,11 @@ class FieldDialog(Dialog):
         self.y = y
         self.words = [
             Word(y+2,  1, 'Edit', True),
-            Word(y+2, 11, 'Handsteuerung', True),
-            Word(y+2, 30, 'New', True),
-            Word(y+2, 36, 'Load', True),
-            Word(y+2, 44, 'Save', True),
-            Word(y+2, 50, 'Print', True),
+            # Word(y+2, 10, 'Handsteuerung', True),
+            Word(y+2, 34, 'New', True),
+            Word(y+2, 44, 'Load', True),
+            Word(y+2, 54, 'Save', True),
+            # Word(y+2, 64, 'Print', True),
             Word(y+2, 74, 'Quit', True),
         ]
         self.filename = FileName(self.y+1, 14)
@@ -259,11 +259,11 @@ def main_menu():
 
     def draw():
         header = """
-oo    o  o  o  o  o    oooo    ooo   oooo    ooo   ooooo  ooooo  oooo
-o o   o  o  o o   o    o   o  o   o  o   o  o   o    o    o      o   o
-o  o  o  o  oo    o    oooo   o   o  oooo   o   o    o    ooooo  oooo
-o   o o  o  o o   o    o  o   o   o  o   o  o   o    o    o      o  o
-o    oo  o  o  o  o    o   o   ooo   oooo    ooo     o    ooooo  o   o
+oo    o  o  o  o  o     oooo    ooo   oooo    ooo   ooooo  ooooo  oooo
+o o   o  o  o o   o     o   o  o   o  o   o  o   o    o    o      o   o
+o  o  o  o  oo    o     oooo   o   o  oooo   o   o    o    ooooo  oooo
+o   o o  o  o o   o     o  o   o   o  o   o  o   o    o    o      o  o
+o    oo  o  o  o  o     o   o   ooo   oooo    ooo     o    ooooo  o   o
 """[1:].replace('o', '█').splitlines()
         draw_frame(7, 80)
         for i, h in enumerate(header):
