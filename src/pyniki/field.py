@@ -59,8 +59,8 @@ class Field:
                            '│' if w else ' ')
         for y, ww in enumerate(self.h_walls):
             for x, w in enumerate(ww):
-                scr.addstr(self.screen_y(y)+1, self.screen_x(x)-1,
-                           ('─' if w else ' ')*3)
+                scr.addstr(self.screen_y(y)+1, self.screen_x(x)- (1 if x > 0 else 2),
+                           ('─' if w else ' ')*(4 if (x == 0 or (x+1) == self.size_x) else 3))
         for y in range(self.size_y+1):
             for x in range(self.size_x+1):
                 l = self.h_walls[y][x-1] if x > 0 else False

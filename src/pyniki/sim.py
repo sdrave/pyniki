@@ -46,7 +46,7 @@ def wait():
 
 def is_free(direction):
     y, x = _field.pos
-    match _field.direction:
+    match direction:
         case 0:
             return not _field.v_walls[y][x+1]
         case 1:
