@@ -226,7 +226,7 @@ class FileName:
 
     def draw(self):
         scr.addstr(self.y, self.x, f'{self.txt:14}')
-    
+
     def edit(self, txt=None):
         curses.curs_set(1)
         txt = (txt if txt is not None else self.txt)
@@ -490,7 +490,7 @@ def hat_vorrat():
     return field.vorrat > 0
 
 
-def platz_belegt(): 
+def platz_belegt():
     discs = field.get_discs(*field.pos)
     return discs > 0
 
@@ -664,7 +664,7 @@ def edit_field():
 def run_print_first_line():
     print_first_line(
         f'@ESC + - 0@                                                    Geschwindigkeit: {speed}'
-    ) 
+    )
 
 
 def run_program():
@@ -743,13 +743,13 @@ def main_menu():
     active_dialog = robot_dialog
 
     def draw():
-        header = '''
-oo    o  o  o  o  o    oooo    ooo   oooo    ooo   ooooo  ooooo  oooo 
+        header = """
+oo    o  o  o  o  o    oooo    ooo   oooo    ooo   ooooo  ooooo  oooo
 o o   o  o  o o   o    o   o  o   o  o   o  o   o    o    o      o   o
-o  o  o  o  oo    o    oooo   o   o  oooo   o   o    o    ooooo  oooo 
-o   o o  o  o o   o    o  o   o   o  o   o  o   o    o    o      o  o 
+o  o  o  o  oo    o    oooo   o   o  oooo   o   o    o    ooooo  oooo
+o   o o  o  o o   o    o  o   o   o  o   o  o   o    o    o      o  o
 o    oo  o  o  o  o    o   o   ooo   oooo    ooo     o    ooooo  o   o
-'''[1:].replace('o', '█').splitlines()
+"""[1:].replace('o', '█').splitlines()
         draw_frame(7, 80)
         for i, h in enumerate(header):
             scr.addstr(i+1, 5, h)
