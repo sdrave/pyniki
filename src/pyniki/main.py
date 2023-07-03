@@ -326,7 +326,7 @@ class FileDialog:
         for iy, row in enumerate(self.path_array[self.oy:self.oy+7]):
             wr = []
             for ix, p in enumerate(row):
-                wr.append(Word(self.y+1+iy, 1+ix*18, p, False))
+                wr.append(Word(self.y+1+iy, 1+ix*21, p, False))
             word_array.append(wr)
         self.word_array = word_array
 
