@@ -136,10 +136,13 @@ def run_program(program, field):
 
     try:
         compile(program, 'None', 'exec')
-    except SyntaxError as e:
+    except (IndentationError, SyntaxError) as e:
         draw_frame(5, 60, 16, 10)
         scr.move(18, 12)
-        print_highlight(f'@FEHLER!@ Syntaxfehler in Zeile {e.lineno}')
+        if isinstance(e, IndentationError):
+            print_highlight(f'@FEHLER!@ Falsche Einrückung in Zeile {e.lineno}')
+        else:
+            print_highlight(f'@FEHLER!@ Syntaxfehler in Zeile {e.lineno}')
         key = scr.getch()
         scr.clear()
         return
@@ -190,5 +193,3 @@ def run_program(program, field):
         if key == ord(' '):
             break
     scr.clear()
-
-
