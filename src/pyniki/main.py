@@ -10,8 +10,6 @@ from pyniki.field import Field, edit_field
 from pyniki.sim import run_program
 from pyniki.ui import draw_frame
 
-program = ''
-
 
 class Word:
     def __init__(self, y, x, txt, highlight=False):
@@ -251,10 +249,9 @@ class FieldDialog(Dialog):
 
 
 def main_menu():
-    global program
-    global field
-
+    program = ''
     field = Field(10, 15, 1)
+
     robot_dialog = RobotDialog(7)
     field_dialog = FieldDialog(11)
     file_dialog = FileDialog(15, 'py')
