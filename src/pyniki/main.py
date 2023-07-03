@@ -34,7 +34,7 @@ def _teardown():
     scr.keypad(False)
     curses.echo()
     curses.curs_set(curs_state)
-    # curses.endwin()
+    curses.endwin()
 
 def draw_frame(height, width, offset_y=0, offset_x=0, active=False):
     attr = curses.A_BOLD if active else curses.A_NORMAL
@@ -818,6 +818,7 @@ o    oo  o  o  o  o    o   o   ooo   oooo    ooo     o    ooooo  o   o
             draw()
         elif CMD == 'EDIT':
             if active_dialog is robot_dialog:
+                _teardown()
                 p = subprocess.run(['micro', '-tabstospaces', 'true', '-filetype', 'python'],
                                    input=program.encode(),
                                    capture_output=True)
