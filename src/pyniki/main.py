@@ -802,6 +802,8 @@ o    oo  o  o  o  o    o   o   ooo   oooo    ooo     o    ooooo  o   o
                 with open(filename, 'wb') as f:
                     pickle.dump(field, f)
             active_dialog.filename.txt = filename
+            file_dialog.set_extension(file_dialog.extension)
+            draw()
         elif CMD == 'EDIT':
             if active_dialog is robot_dialog:
                 p = subprocess.run(['micro', '-tabstospaces', 'true', '-filetype', 'python'],
