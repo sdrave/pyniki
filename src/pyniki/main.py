@@ -9,30 +9,10 @@ import sys
 import time
 import traceback
 
-scr = None
+from pyniki.curses import curses_disabled, curses_setup, scr
+
 program = ''
-curs_state = None
 
-
-def _setup():
-    global field
-    global scr
-    global curs_state
-    scr = curses.initscr()
-
-    curs_state = curses.curs_set(0)
-    curses.noecho()
-    curses.cbreak()
-    curses.set_escdelay(1)
-    scr.keypad(True)
-    scr.clear()
-
-def _teardown():
-    curses.nocbreak()
-    scr.keypad(False)
-    curses.echo()
-    curses.curs_set(curs_state)
-    curses.endwin()
 
 def draw_frame(height, width, offset_y=0, offset_x=0, active=False):
     attr = curses.A_BOLD if active else curses.A_NORMAL
@@ -821,12 +801,11 @@ o    oo  o  o  o  o    o   o   ooo   oooo    ooo     o    ooooo  o   o
             draw()
         elif CMD == 'EDIT':
             if active_dialog is robot_dialog:
-                _teardown()
-                p = subprocess.run(['micro', '-tabstospaces', 'true', '-filetype', 'python'],
-                                   input=program.encode(),
-                                   capture_output=True)
-                program = p.stdout.decode()
-                _setup()
+                with curses_disabled():
+                    p = subprocess.run(['micro', '-tabstospaces', 'true', '-filetype', 'python'],
+                                       input=program.encode(),
+                                       capture_output=True)
+                    program = p.stdout.decode()
                 draw()
             else:
                 edit_field()
@@ -846,13 +825,8 @@ def run():
     path = pathlib.Path.home() / 'pyniki'
     path.mkdir(exist_ok=True)
     os.chdir(path)
-    _setup()
-    try:
+    with curses_setup():
         main_menu()
-    except Exception as e:
-        _teardown()
-        raise e
-    _teardown()
 
 
 if __name__ == '__main__':
