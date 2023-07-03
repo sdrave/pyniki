@@ -247,17 +247,16 @@ class FieldDialog(Dialog):
         scr.addstr(self.y+1, 1, 'Roboterfeld:')
 
 
+class MainMenu:
 
-def main_menu():
-    program = ''
-    field = Field(10, 15, 1)
+    def __init__(self):
+        self.program = ''
+        self.field = Field(10, 15, 1)
+        self.robot_dialog = RobotDialog(7)
+        self.field_dialog = FieldDialog(11)
+        self.file_dialog = FileDialog(15, 'py')
 
-    robot_dialog = RobotDialog(7)
-    field_dialog = FieldDialog(11)
-    file_dialog = FileDialog(15, 'py')
-    active_dialog = robot_dialog
-
-    def draw():
+    def draw(self):
         header = """
 oo    o  o  o  o  o     oooo    ooo   oooo    ooo   ooooo  ooooo  oooo
 o o   o  o  o o   o     o   o  o   o  o   o  o   o    o    o      o   o
@@ -268,92 +267,95 @@ o    oo  o  o  o  o     o   o   ooo   oooo    ooo     o    ooooo  o   o
         draw_frame(7, 80)
         for i, h in enumerate(header):
             scr.addstr(i+1, 5, h)
-        robot_dialog.draw()
-        field_dialog.draw()
-        file_dialog.draw()
+        self.robot_dialog.draw()
+        self.field_dialog.draw()
+        self.file_dialog.draw()
 
-    draw()
-    while True:
-        CMD = active_dialog.run()
-        if CMD == 'SWITCH':
-            active_dialog.set_selected(-1)
-            active_dialog = robot_dialog if active_dialog is field_dialog else field_dialog
-            if active_dialog is robot_dialog:
-                file_dialog.set_extension('py')
-            else:
-                file_dialog.set_extension('rob')
-            draw()
-        elif CMD == 'LOAD':
-            old_filename = active_dialog.filename.txt
-            filename = active_dialog.filename.edit('')
-            if filename is None:
-                continue
-            if not filename:
-                filename = file_dialog.run()
+    def run(self):
+        robot_dialog, field_dialog, file_dialog = self.robot_dialog, self.field_dialog, self.file_dialog
+        active_dialog = robot_dialog
+        self.draw()
+        while True:
+            CMD = active_dialog.run()
+            if CMD == 'SWITCH':
+                active_dialog.set_selected(-1)
+                active_dialog = robot_dialog if active_dialog is field_dialog else field_dialog
+                if active_dialog is robot_dialog:
+                    file_dialog.set_extension('py')
+                else:
+                    file_dialog.set_extension('rob')
+                self.draw()
+            elif CMD == 'LOAD':
+                old_filename = active_dialog.filename.txt
+                filename = active_dialog.filename.edit('')
                 if filename is None:
-                    active_dialog.filename.txt = old_filename
-                    active_dialog.draw()
                     continue
-                active_dialog.filename.txt = filename
-                active_dialog.draw()
-            if active_dialog is robot_dialog:
-                filename = filename + '.py'
-            else:
-                filename = filename + '.rob'
-            if not os.path.exists(filename):
-                active_dialog.filename.txt = ''
-                continue
-            if active_dialog is robot_dialog:
-                with open(filename, 'rt') as f:
-                    program = f.read()
-            else:
-                with open(filename, 'rb') as f:
-                    field = pickle.load(f)
-                    field.name = filename
-        elif CMD == 'SAVE':
-            filename = active_dialog.filename.edit()
-            if filename is None:
-                continue
-            if active_dialog is robot_dialog:
-                filename = filename + '.py'
-            else:
-                filename = filename + '.rob'
-            if active_dialog is robot_dialog:
-                with open(filename, 'wt') as f:
-                    f.write(program)
-            else:
-                with open(filename, 'wb') as f:
-                    pickle.dump(field, f)
-            file_dialog.set_extension(file_dialog.extension)
-            draw()
-        elif CMD == 'EDIT':
-            if active_dialog is robot_dialog:
-                with curses_disabled():
-                    p = subprocess.run(['micro', '-tabstospaces', 'true', '-filetype', 'python'],
-                                       input=program.encode(),
-                                       capture_output=True)
-                    program = p.stdout.decode()
-                draw()
-            else:
-                edit_field(field)
-                draw()
-        elif CMD == 'NEW':
-            if active_dialog is field_dialog:
-                field = Field(10, 15, 1)
-                edit_field(field)
-                draw()
-        elif CMD == 'RUN':
-            run_program(program, field)
-            draw()
-        elif CMD == 'QUIT':
-            break
+                if not filename:
+                    filename = file_dialog.run()
+                    if filename is None:
+                        active_dialog.filename.txt = old_filename
+                        active_dialog.draw()
+                        continue
+                    active_dialog.filename.txt = filename
+                    active_dialog.draw()
+                if active_dialog is robot_dialog:
+                    filename = filename + '.py'
+                else:
+                    filename = filename + '.rob'
+                if not os.path.exists(filename):
+                    active_dialog.filename.txt = ''
+                    continue
+                if active_dialog is robot_dialog:
+                    with open(filename, 'rt') as f:
+                        self.program = f.read()
+                else:
+                    with open(filename, 'rb') as f:
+                        self.field = pickle.load(f)
+                        self.field.name = filename
+            elif CMD == 'SAVE':
+                filename = active_dialog.filename.edit()
+                if filename is None:
+                    continue
+                if active_dialog is robot_dialog:
+                    filename = filename + '.py'
+                else:
+                    filename = filename + '.rob'
+                if active_dialog is robot_dialog:
+                    with open(filename, 'wt') as f:
+                        f.write(self.program)
+                else:
+                    with open(filename, 'wb') as f:
+                        pickle.dump(self.field, f)
+                file_dialog.set_extension(file_dialog.extension)
+                self.draw()
+            elif CMD == 'EDIT':
+                if active_dialog is robot_dialog:
+                    with curses_disabled():
+                        p = subprocess.run(['micro', '-tabstospaces', 'true', '-filetype', 'python'],
+                                           input=self.program.encode(),
+                                           capture_output=True)
+                        self.program = p.stdout.decode()
+                    self.draw()
+                else:
+                    edit_field(self.field)
+                    self.draw()
+            elif CMD == 'NEW':
+                if active_dialog is field_dialog:
+                    self.field = Field(10, 15, 1)
+                    edit_field(self.field)
+                    self.draw()
+            elif CMD == 'RUN':
+                run_program(self.program, self.field)
+                self.draw()
+            elif CMD == 'QUIT':
+                break
 
 def run():
     path = pathlib.Path.home() / 'pyniki'
     path.mkdir(exist_ok=True)
     os.chdir(path)
     with curses_setup():
-        main_menu()
+        MainMenu().run()
 
 
 if __name__ == '__main__':
