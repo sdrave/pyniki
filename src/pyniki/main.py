@@ -1,4 +1,3 @@
-import atexit
 import copy
 import curses
 import glob
@@ -20,7 +19,6 @@ def _setup():
     global scr
     global curs_state
     scr = curses.initscr()
-    atexit.register(_teardown)
 
     curs_state = curses.curs_set(0)
     curses.noecho()
@@ -849,7 +847,12 @@ def run():
     path.mkdir(exist_ok=True)
     os.chdir(path)
     _setup()
-    main_menu()
+    try:
+        main_menu()
+    except Exception as e:
+        _teardown()
+        raise e
+    _teardown()
 
 
 if __name__ == '__main__':
