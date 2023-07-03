@@ -8,7 +8,7 @@ import subprocess
 from pyniki.curses import curses_disabled, curses_setup, scr
 from pyniki.field import Field, edit_field
 from pyniki.sim import run_program
-from pyniki.ui import draw_frame
+from pyniki.ui import draw_frame, print_last_line
 
 
 class Word:
@@ -250,8 +250,8 @@ class FieldDialog(Dialog):
 class MainMenu:
 
     def __init__(self):
-        self.program = ''
-        self.field = Field(10, 15, 1)
+        self.program = None
+        self.field = None
         self.robot_dialog = RobotDialog(7)
         self.field_dialog = FieldDialog(11)
         self.file_dialog = FileDialog(15, 'py')
@@ -270,6 +270,64 @@ o    oo  o  o  o  o     o   o   ooo   oooo    ooo     o    ooooo  o   o
         self.robot_dialog.draw()
         self.field_dialog.draw()
         self.file_dialog.draw()
+
+    def save_program(self):
+        filename = self.robot_dialog.filename.txt + '.py'
+        with open(filename, 'wt') as f:
+            f.write(self.program)
+
+    def save_field(self):
+        filename = self.field_dialog.filename.txt + '.rob'
+        with open(filename, 'wb') as f:
+            pickle.dump(self.field, f)
+
+    def edit_program(self):
+        with curses_disabled():
+            p = subprocess.run(['micro', '-tabstospaces', 'true', '-filetype', 'python'],
+                               input=self.program.encode(),
+                               capture_output=True)
+            self.program = p.stdout.decode()
+
+    def quit_dialog(self):
+        draw_frame(7, 60, 16, 10)
+        scr.addstr(17, 11, 'Niki-Programm beenden (j/n)? ')
+        curses.curs_set(1)
+        while True:
+            key = scr.getch()
+            if key == ord('n'):
+                scr.clear()
+                self.draw()
+                curses.curs_set(0)
+                return False
+            elif key == ord('j'):
+                scr.addstr('j')
+                break
+
+        if self.program is not None:
+            scr.addstr(19, 11, 'Roboterprogramm speichern (j/n)? ')
+            while True:
+                key = scr.getch()
+                if key == ord('n'):
+                    scr.addstr('n')
+                    break
+                elif key == ord('j'):
+                    scr.addstr('j')
+                    self.save_program()
+                    break
+
+        if self.field is not None:
+            scr.addstr(21, 11, 'Roboterfeld speichern (j/n)? ')
+            while True:
+                key = scr.getch()
+                if key == ord('n'):
+                    scr.addstr('n')
+                    break
+                elif key == ord('j'):
+                    scr.addstr('j')
+                    self.save_field()
+                    break
+
+        return True
 
     def run(self):
         robot_dialog, field_dialog, file_dialog = self.robot_dialog, self.field_dialog, self.file_dialog
@@ -313,42 +371,78 @@ o    oo  o  o  o  o     o   o   ooo   oooo    ooo     o    ooooo  o   o
                         self.field = pickle.load(f)
                         self.field.name = filename
             elif CMD == 'SAVE':
+                if active_dialog is robot_dialog:
+                    if self.program is None:
+                        continue
+                else:
+                    if self.field is None:
+                        continue
                 filename = active_dialog.filename.edit()
                 if filename is None:
                     continue
                 if active_dialog is robot_dialog:
-                    filename = filename + '.py'
+                    self.save_program()
                 else:
-                    filename = filename + '.rob'
-                if active_dialog is robot_dialog:
-                    with open(filename, 'wt') as f:
-                        f.write(self.program)
-                else:
-                    with open(filename, 'wb') as f:
-                        pickle.dump(self.field, f)
+                    self.save_field()
                 file_dialog.set_extension(file_dialog.extension)
                 self.draw()
             elif CMD == 'EDIT':
+                if not active_dialog.filename.txt:
+                    old_filename = active_dialog.filename.txt
+                    filename = active_dialog.filename.edit('')
+                    if filename is None:
+                        continue
+                    if not filename:
+                        filename = file_dialog.run()
+                        if filename is None:
+                            active_dialog.filename.txt = old_filename
+                            active_dialog.draw()
+                            continue
+                        active_dialog.filename.txt = filename
+                        active_dialog.draw()
+
                 if active_dialog is robot_dialog:
-                    with curses_disabled():
-                        p = subprocess.run(['micro', '-tabstospaces', 'true', '-filetype', 'python'],
-                                           input=self.program.encode(),
-                                           capture_output=True)
-                        self.program = p.stdout.decode()
+                    if self.program is None:
+                        self.program = ''
+                    self.edit_program()
                     self.draw()
                 else:
+                    if self.field is None:
+                        self.field = Field(10, 15, 1)
                     edit_field(self.field)
                     self.draw()
             elif CMD == 'NEW':
-                if active_dialog is field_dialog:
+                active_dialog.filename.txt = 'NONAME'
+                if active_dialog is robot_dialog:
+                    self.program = ''
+                    self.edit_program()
+                else:
                     self.field = Field(10, 15, 1)
                     edit_field(self.field)
-                    self.draw()
+                self.draw()
             elif CMD == 'RUN':
+                if self.program is None:
+                    print_last_line(
+                        'Es wurde noch keine Datei geladen                           <Leertaste drücken>'
+                    )
+                    while scr.getch() != ord(' '):
+                        pass
+                    print_last_line('')
+                    continue
+                if self.field is None:
+                    print_last_line(
+                        'Es wurde noch kein Arbeitsfeld geladen                      <Leertaste drücken>'
+                    )
+                    while scr.getch() != ord(' '):
+                        pass
+                    print_last_line('')
+                    continue
                 run_program(self.program, self.field)
                 self.draw()
             elif CMD == 'QUIT':
-                break
+                if self.quit_dialog():
+                    break
+
 
 def run():
     path = pathlib.Path.home() / 'pyniki'
