@@ -259,14 +259,17 @@ class FileName:
             elif key == curses.KEY_DC:
                 if txt[pos] != '_':
                     txt = txt[:pos] + txt[pos+1:] + '_'
+            elif key == 27:
+                self.draw()
+                curses.curs_set(0)
+                return None
             elif key == ord('\n'):
                 break
 
         curses.curs_set(0)
-        txt = txt.split('.')[0]
         txt = txt.rstrip('_')
+        self.txt = txt
         return txt
-
 
 
 class Dialog:
@@ -338,7 +341,6 @@ class FileDialog:
         self.path_array = path_array
         self.sy, self.sx, self.oy = -1, -1, 0
         self._update_words()
-
 
     def set_selected(self, sy, sx):
         if self.sy >= 0:
@@ -778,14 +780,18 @@ o    oo  o  o  o  o    o   o   ooo   oooo    ooo     o    ooooo  o   o
             draw()
         elif CMD == 'LOAD':
             filename = active_dialog.filename.edit('')
+            if filename is None:
+                continue
             if not filename:
                 filename = file_dialog.run()
-            filename = filename[:8]
+                active_dialog.filename.txt = filename
+                active_dialog.draw()
             if active_dialog is robot_dialog:
                 filename = filename + '.py'
             else:
                 filename = filename + '.rob'
             if not os.path.exists(filename):
+                active_dialog.filename.txt = ''
                 continue
             if active_dialog is robot_dialog:
                 with open(filename, 'rt') as f:
@@ -794,10 +800,10 @@ o    oo  o  o  o  o    o   o   ooo   oooo    ooo     o    ooooo  o   o
                 with open(filename, 'rb') as f:
                     field = pickle.load(f)
                     field.name = filename
-            active_dialog.filename.txt = filename
         elif CMD == 'SAVE':
             filename = active_dialog.filename.edit()
-            filename = filename[:8]
+            if filename is None:
+                continue
             if active_dialog is robot_dialog:
                 filename = filename + '.py'
             else:
@@ -808,7 +814,6 @@ o    oo  o  o  o  o    o   o   ooo   oooo    ooo     o    ooooo  o   o
             else:
                 with open(filename, 'wb') as f:
                     pickle.dump(field, f)
-            active_dialog.filename.txt = filename
             file_dialog.set_extension(file_dialog.extension)
             draw()
         elif CMD == 'EDIT':
