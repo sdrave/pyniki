@@ -369,7 +369,7 @@ o    oo  o  o  o  o     o   o   ooo   oooo    ooo     o    ooooo  o   o
                 else:
                     with open(filename, 'rb') as f:
                         self.field = pickle.load(f)
-                        self.field.name = filename
+                        self.field.name = field_dialog.filename.txt
             elif CMD == 'SAVE':
                 if active_dialog is robot_dialog:
                     if self.program is None:
@@ -408,7 +408,7 @@ o    oo  o  o  o  o     o   o   ooo   oooo    ooo     o    ooooo  o   o
                     self.draw()
                 else:
                     if self.field is None:
-                        self.field = Field(10, 15, 1)
+                        self.field = Field(10, 15, 1, name=self.field_dialog.filename.txt)
                     edit_field(self.field)
                     self.draw()
             elif CMD == 'NEW':
@@ -417,7 +417,7 @@ o    oo  o  o  o  o     o   o   ooo   oooo    ooo     o    ooooo  o   o
                     self.program = ''
                     self.edit_program()
                 else:
-                    self.field = Field(10, 15, 1)
+                    self.field = Field(10, 15, 1, name=self.field_dialog.filename.txt)
                     edit_field(self.field)
                 self.draw()
             elif CMD == 'RUN':

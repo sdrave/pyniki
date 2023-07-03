@@ -103,7 +103,7 @@ class Field:
         panel_x = self.panel_x
         panel_y = self.panel_y
         scr.addstr(panel_y, panel_x, 'Feldname:')
-        scr.addstr(panel_y + 2, panel_x, 'FOOO')
+        scr.addstr(panel_y + 2, panel_x, self.name)
         scr.addstr(panel_y + 5, panel_x, 'Position')
         scr.addstr(panel_y + 7, panel_x, f'X={self.nx+1:2} Y={self.ny+1:2}')
         scr.addstr(panel_y + 10, panel_x, 'Vorrat')
