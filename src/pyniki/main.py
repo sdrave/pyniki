@@ -1,23 +1,16 @@
-import copy
 import curses
 import glob
 import os
 import pathlib
 import pickle
 import subprocess
-import sys
-import time
-import traceback
 
 from pyniki.curses import curses_disabled, curses_setup, scr
 from pyniki.field import Field, edit_field
-from pyniki.ui import draw_frame, print_first_line, print_highlight, print_last_line
+from pyniki.sim import run_program
+from pyniki.ui import draw_frame
 
 program = ''
-
-
-class NikiError(Exception):
-    pass
 
 
 class Word:
@@ -257,272 +250,6 @@ class FieldDialog(Dialog):
 
 
 
-def wait():
-    global speed
-    field.draw()
-    if speed > 0:
-        scr.nodelay(True)
-    while (key:=scr.getch()) > -1:
-        if key == ord('\n') and speed == 0:
-            break
-        if key == ord('+'):
-            if speed == 0:
-                scr.nodelay(True)
-            if speed < 9:
-                speed += 1
-        elif key == ord('-'):
-            if speed == 1:
-                scr.nodelay(False)
-            if speed > 0:
-                speed -= 1
-        elif key == ord('0'):
-            scr.nodelay(False)
-            speed = 0
-        elif key == 27:
-            raise NikiError
-        run_print_first_line()
-    scr.nodelay(False)
-    if speed > 0:
-        time.sleep(0.1 + (9-speed)*0.2)
-
-
-def is_free(direction):
-    y, x = field.pos
-    match field.direction:
-        case 0:
-            return not field.v_walls[y][x+1]
-        case 1:
-            return not field.h_walls[y+1][x]
-        case 2:
-            return not field.v_walls[y][x]
-        case 3:
-            return not field.h_walls[y][x]
-
-
-def vorne_frei():
-    return is_free(field.direction)
-
-
-def links_frei():
-    return is_free((field.direction + 1) % 4)
-
-
-def rechts_frei():
-    return is_free((field.direction - 1) % 4)
-
-
-def hat_vorrat():
-    return field.vorrat > 0
-
-
-def platz_belegt():
-    discs = field.get_discs(*field.pos)
-    return discs > 0
-
-
-def nimm_auf():
-    if not platz_belegt():
-        raise NikiError
-    if field.vorrat == 99:
-        raise NikiError
-    y, x = field.pos
-    field.set_discs(y, x, field.get_discs(y, x) - 1)
-    field.vorrat += 1
-    wait()
-
-
-def gib_ab():
-    if not hat_vorrat():
-        raise NikiError
-    y, x = field.pos
-    discs = field.get_discs(*field.pos)
-    if discs == 9:
-        raise NikiError
-    field.set_discs(y, x, discs + 1)
-    field.vorrat -= 1
-    wait()
-
-
-def vor():
-    if not vorne_frei():
-        raise NikiError()
-    y, x = field.pos
-    match field.direction:
-        case 0:
-            field.pos = [y, x+1]
-        case 1:
-            field.pos = [y+1, x]
-        case 2:
-            field.pos = [y, x-1]
-        case 3:
-            field.pos = [y-1, x]
-    wait()
-
-
-def drehe_links():
-    field.direction = (field.direction + 1) % 4
-    wait()
-
-
-def edit_field():
-    scr.clear()
-    field.draw()
-    curses.curs_set(1)
-    y, x = 0, 0
-
-    def std_fist_line():
-        print_first_line(
-            '@P@osition @R@ichtung @l@egen @w@egnehmen @H@indernis @a@bräumen @V@orrat @q@uit'
-        )
-
-    def update_cursor():
-        scr.move(field.screen_y(y), field.screen_x(x))
-
-    while True:
-        std_fist_line()
-        update_cursor()
-
-        key = scr.getch()
-        if key == ord('q'):
-            break
-        elif key == curses.KEY_RIGHT:
-            x = (x + 1) % field.size_x
-        elif key == curses.KEY_LEFT:
-            x = (x - 1) % field.size_x
-        elif key == curses.KEY_UP:
-            y = (y + 1) % field.size_y
-        elif key == curses.KEY_DOWN:
-            y = (y - 1) % field.size_y
-        elif key == ord('p'):
-            field.pos = [y, x]
-        elif key == ord('r'):
-            print_first_line('@N@ord @W@est @S@üd @O@st')
-            update_cursor()
-            directions = [ord(d) for d in ['o', 'n', 'w', 's']]
-            while True:
-                key = scr.getch()
-                if key in directions:
-                    field.direction = directions.index(key)
-                    break
-        elif key in [ord('h'), ord('a')]:
-            val = key == ord('h')
-            print_first_line('@u@nten @o@ben @r@echts @l@inks')
-            update_cursor()
-            while True:
-                key = scr.getch()
-                if key == ord('r'):
-                    if x+1 < field.size_x:
-                        field.set_v_wall(y, x+1, val)
-                    break
-                elif key == ord('l'):
-                    if x > 0:
-                        field.set_v_wall(y, x, val)
-                    break
-                if key == ord('o'):
-                    if y+1 < field.size_y:
-                        field.set_h_wall(y+1, x, val)
-                    break
-                elif key == ord('u'):
-                    if y > 0:
-                        field.set_h_wall(y, x, val)
-                    break
-        elif key == ord('l'):
-            discs = field.get_discs(y, x)
-            if discs < 9:
-                field.set_discs(y, x, discs+1)
-        elif key == ord('w'):
-            discs = field.get_discs(y, x)
-            if discs > 0:
-                field.set_discs(y, x, discs-1)
-        elif key == ord('v'):
-            scr.addstr(0, 0, f'{"Materialvorrat des Roboters eingeben":<80}')
-            scr.move(field.panel_y + 12, field.panel_x + 2)
-            digits = []
-            for _ in range(2):
-                while True:
-                    key = scr.getch()
-                    if key in [ord(str(i)) for i in range(0, 10)]:
-                        scr.addstr(chr(key))
-                        digits.append(int(chr(key)))
-                        break
-            field.vorrat = digits[0] * 10 + digits[1]
-        else:
-            pass
-    curses.curs_set(0)
-    scr.clear()
-
-
-def run_print_first_line():
-    print_first_line(
-        f'@ESC + - 0@                                                    Geschwindigkeit: {speed}'
-    )
-
-
-def run_program():
-    global speed
-    global field
-
-    orig_field = copy.deepcopy(field)
-
-    try:
-        compile(program, 'None', 'exec')
-    except SyntaxError as e:
-        draw_frame(5, 60, 16, 10)
-        scr.move(18, 12)
-        print_highlight(f'@FEHLER!@ Syntaxfehler in Zeile {e.lineno}')
-        key = scr.getch()
-        scr.clear()
-        return
-    scr.clear()
-    field.zustand = True
-    field.draw()
-
-    print_last_line('Geschwindigkeit eingeben (0..9)')
-    print_first_line(f'{"Geschwindigkeit:  ":>79}')
-    scr.move(0, 78)
-    curses.curs_set(1)
-    while True:
-        key = scr.getch()
-        if key in [ord(str(i)) for i in range(0, 10)]:
-            speed = int(chr(key))
-            break
-    curses.curs_set(0)
-    print_last_line('')
-
-    run_print_first_line()
-    error = False
-    try:
-        wait()
-        exec(program, {k: v for k, v in globals().items()
-                       if k in ['vor', 'drehe_links', 'nimm_auf', 'gib_ab', 'vorne_frei',
-                                'links_frei', 'rechts_frei', 'hat_vorrat', 'platz_belegt']})
-    except KeyboardInterrupt:
-        pass
-    except NikiError:
-        error = True
-    except NameError as e:
-        line = traceback.extract_tb(sys.exc_info()[2])[-1].lineno
-        print_first_line(f'@FEHLER!@ Unbekannter Name "{e.name}" in Zeile {line}')
-        error = True
-    if error:
-        field.zustand = False
-        field.draw()
-        print_last_line(
-            'Niki hat sich abgeschaltet                                  <Leertaste drücken>'
-        )
-    else:
-        print_last_line(
-            'Programm beendet                                            <Leertaste drücken>'
-        )
-
-    while True:
-        key = scr.getch()
-        if key == ord(' '):
-            break
-    field = orig_field
-    scr.clear()
-
-
 def main_menu():
     global program
     global field
@@ -611,15 +338,15 @@ o    oo  o  o  o  o    o   o   ooo   oooo    ooo     o    ooooo  o   o
                     program = p.stdout.decode()
                 draw()
             else:
-                edit_field()
+                edit_field(field)
                 draw()
         elif CMD == 'NEW':
             if active_dialog is field_dialog:
                 field = Field(10, 15, 1)
-                edit_field()
+                edit_field(field)
                 draw()
         elif CMD == 'RUN':
-            run_program()
+            run_program(program, field)
             draw()
         elif CMD == 'QUIT':
             break
