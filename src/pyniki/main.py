@@ -823,5 +823,10 @@ o    oo  o  o  o  o    o   o   ooo   oooo    ooo     o    ooooo  o   o
         elif CMD == 'QUIT':
             break
 
-_setup()
-main_menu()
+def run():
+    _setup()
+    main_menu()
+
+
+if __name__ == '__main__':
+    run()
