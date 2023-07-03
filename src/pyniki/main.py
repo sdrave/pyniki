@@ -3,6 +3,7 @@ import copy
 import curses
 import glob
 import os
+import pathlib
 import pickle
 import subprocess
 import sys
@@ -824,6 +825,9 @@ o    oo  o  o  o  o    o   o   ooo   oooo    ooo     o    ooooo  o   o
             break
 
 def run():
+    path = pathlib.Path.home() / 'pyniki'
+    path.mkdir(exist_ok=True)
+    os.chdir(path)
     _setup()
     main_menu()
 
