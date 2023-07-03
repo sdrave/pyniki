@@ -10,7 +10,7 @@ import time
 import traceback
 
 from pyniki.curses import curses_disabled, curses_setup, scr
-from pyniki.field import Field
+from pyniki.field import Field, edit_field
 from pyniki.ui import draw_frame, print_first_line, print_highlight, print_last_line
 
 program = ''

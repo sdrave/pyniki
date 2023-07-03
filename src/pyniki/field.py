@@ -1,4 +1,7 @@
+import curses
+
 from pyniki.curses import scr
+from pyniki.ui import print_first_line
 
 
 class Field:
@@ -153,3 +156,91 @@ class Field:
     def direction(self, val):
         self._direction = val
         self.draw()
+
+
+def edit_field(field):
+    scr.clear()
+    field.draw()
+    curses.curs_set(1)
+    y, x = 0, 0
+
+    def std_fist_line():
+        print_first_line(
+            '@P@osition @R@ichtung @l@egen @w@egnehmen @H@indernis @a@bräumen @V@orrat @q@uit'
+        )
+
+    def update_cursor():
+        scr.move(field.screen_y(y), field.screen_x(x))
+
+    while True:
+        std_fist_line()
+        update_cursor()
+
+        key = scr.getch()
+        if key == ord('q'):
+            break
+        elif key == curses.KEY_RIGHT:
+            x = (x + 1) % field.size_x
+        elif key == curses.KEY_LEFT:
+            x = (x - 1) % field.size_x
+        elif key == curses.KEY_UP:
+            y = (y + 1) % field.size_y
+        elif key == curses.KEY_DOWN:
+            y = (y - 1) % field.size_y
+        elif key == ord('p'):
+            field.pos = [y, x]
+        elif key == ord('r'):
+            print_first_line('@N@ord @W@est @S@üd @O@st')
+            update_cursor()
+            directions = [ord(d) for d in ['o', 'n', 'w', 's']]
+            while True:
+                key = scr.getch()
+                if key in directions:
+                    field.direction = directions.index(key)
+                    break
+        elif key in [ord('h'), ord('a')]:
+            val = key == ord('h')
+            print_first_line('@u@nten @o@ben @r@echts @l@inks')
+            update_cursor()
+            while True:
+                key = scr.getch()
+                if key == ord('r'):
+                    if x+1 < field.size_x:
+                        field.set_v_wall(y, x+1, val)
+                    break
+                elif key == ord('l'):
+                    if x > 0:
+                        field.set_v_wall(y, x, val)
+                    break
+                if key == ord('o'):
+                    if y+1 < field.size_y:
+                        field.set_h_wall(y+1, x, val)
+                    break
+                elif key == ord('u'):
+                    if y > 0:
+                        field.set_h_wall(y, x, val)
+                    break
+        elif key == ord('l'):
+            discs = field.get_discs(y, x)
+            if discs < 9:
+                field.set_discs(y, x, discs+1)
+        elif key == ord('w'):
+            discs = field.get_discs(y, x)
+            if discs > 0:
+                field.set_discs(y, x, discs-1)
+        elif key == ord('v'):
+            scr.addstr(0, 0, f'{"Materialvorrat des Roboters eingeben":<80}')
+            scr.move(field.panel_y + 12, field.panel_x + 2)
+            digits = []
+            for _ in range(2):
+                while True:
+                    key = scr.getch()
+                    if key in [ord(str(i)) for i in range(0, 10)]:
+                        scr.addstr(chr(key))
+                        digits.append(int(chr(key)))
+                        break
+            field.vorrat = digits[0] * 10 + digits[1]
+        else:
+            pass
+    curses.curs_set(0)
+    scr.clear()
