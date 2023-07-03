@@ -247,11 +247,18 @@ class FileName:
                 if pos+1 < 12:
                     pos += 1
             elif key == curses.KEY_RIGHT:
-                if pos+1 < 12:
+                if pos+1 < 12 and txt[pos] != '_':
                     pos += 1
             elif key == curses.KEY_LEFT:
                 if pos > 0:
                     pos -= 1
+            elif key == curses.KEY_BACKSPACE:
+                if pos > 0:
+                    pos -= 1
+                    txt = txt[:pos] + txt[pos+1:] + '_'
+            elif key == curses.KEY_DC:
+                if txt[pos] != '_':
+                    txt = txt[:pos] + txt[pos+1:] + '_'
             elif key == ord('\n'):
                 break
 
