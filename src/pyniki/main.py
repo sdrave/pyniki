@@ -392,7 +392,7 @@ class FileDialog:
                 return retval
             elif key == 27:
                 self.set_selected(-1, -1)
-                return ''
+                return None
 
 
 
@@ -779,11 +779,16 @@ o    oo  o  o  o  o    o   o   ooo   oooo    ooo     o    ooooo  o   o
                 file_dialog.set_extension('rob')
             draw()
         elif CMD == 'LOAD':
+            old_filename = active_dialog.filename.txt
             filename = active_dialog.filename.edit('')
             if filename is None:
                 continue
             if not filename:
                 filename = file_dialog.run()
+                if filename is None:
+                    active_dialog.filename.txt = old_filename
+                    active_dialog.draw()
+                    continue
                 active_dialog.filename.txt = filename
                 active_dialog.draw()
             if active_dialog is robot_dialog:
