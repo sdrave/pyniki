@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "pyNIKI"
-version = "0.0.2"
+version = "0.0.3"
 description = "Classic Niki the robot in Python"
 readme = "README.md"
 license.file = "LICENSE"
