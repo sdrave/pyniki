@@ -172,6 +172,9 @@ class FileDialog:
                 w.draw()
 
     def run(self):
+        if not self.word_array:
+            return None
+
         self.set_selected(0, 0)
 
         while True:
