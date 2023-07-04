@@ -46,15 +46,14 @@ def wait():
 
 def is_free(direction):
     y, x = _field.pos
-    match direction:
-        case 0:
-            return not _field.v_walls[y][x+1]
-        case 1:
-            return not _field.h_walls[y+1][x]
-        case 2:
-            return not _field.v_walls[y][x]
-        case 3:
-            return not _field.h_walls[y][x]
+    if direction == 0:
+        return not _field.v_walls[y][x+1]
+    elif direction == 1:
+        return not _field.h_walls[y+1][x]
+    elif direction == 2:
+        return not _field.v_walls[y][x]
+    else:
+        return not _field.h_walls[y][x]
 
 
 def vorne_frei():
@@ -105,15 +104,14 @@ def vor():
     if not vorne_frei():
         raise NikiError()
     y, x = _field.pos
-    match _field.direction:
-        case 0:
-            _field.pos = [y, x+1]
-        case 1:
-            _field.pos = [y+1, x]
-        case 2:
-            _field.pos = [y, x-1]
-        case 3:
-            _field.pos = [y-1, x]
+    if _field.direction == 0:
+        _field.pos = [y, x+1]
+    elif _field.direction == 1:
+        _field.pos = [y+1, x]
+    elif _field.direction == 2:
+        _field.pos = [y, x-1]
+    else:
+        _field.pos = [y-1, x]
     wait()
 
 
