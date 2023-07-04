@@ -12,7 +12,10 @@ def setup():
     _curs_state = curses.curs_set(0)
     curses.noecho()
     curses.cbreak()
-    curses.set_escdelay(1)
+    try:
+        curses.set_escdelay(1)
+    except AttributeError:
+        pass
     _scr.keypad(True)
     _scr.clear()
 
