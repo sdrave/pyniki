@@ -173,7 +173,13 @@ def run_program(program, field):
         error = True
     except NameError as e:
         line = traceback.extract_tb(sys.exc_info()[2])[-1].lineno
-        print_first_line(f'@FEHLER!@ Unbekannter Name "{e.name}" in Zeile {line}')
+        try:
+            name = e.name
+        except AttributeError:  # Python < 3.10
+            # from https://stackoverflow.com/a/44731654
+            import re
+            name = re.search("'(?P<name>.+?)'", e.args[0]).group('name')
+        print_first_line(f'@FEHLER!@ Unbekannter Name "{name}" in Zeile {line}')
         error = True
     if error:
         _field.zustand = False
