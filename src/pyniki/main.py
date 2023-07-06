@@ -404,14 +404,25 @@ o    oo  o  o  o  o     o   o   ooo   oooo    ooo     o    ooooo  o   o
                         active_dialog.filename.txt = filename
                         active_dialog.draw()
 
+                    if active_dialog is robot_dialog:
+                        filename = filename + '.py'
+                    else:
+                        filename = filename + '.rob'
+                    if not os.path.exists(filename):
+                        active_dialog.filename.txt = ''
+                        continue
+                    if active_dialog is robot_dialog:
+                        with open(filename, 'rt') as f:
+                            self.program = f.read()
+                    else:
+                        with open(filename, 'rb') as f:
+                            self.field = pickle.load(f)
+                            self.field.name = field_dialog.filename.txt
+
                 if active_dialog is robot_dialog:
-                    if self.program is None:
-                        self.program = ''
                     self.edit_program()
                     self.draw()
                 else:
-                    if self.field is None:
-                        self.field = Field(10, 15, 1, name=self.field_dialog.filename.txt)
                     edit_field(self.field)
                     self.draw()
             elif CMD == 'NEW':
